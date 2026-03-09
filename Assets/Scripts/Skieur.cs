@@ -21,7 +21,9 @@ public class Skieur : MonoBehaviour
       //Points
     public int points = 0;
     //Temps
-    public float tempsPasse = 0f;
+    public float tempsPasse = 0f; 
+    //booléen pour savoir si le skieur est mort ou pas
+      public bool estMort = false;
 
     public InputAction onDeplacementVertical;
     public InputAction onDeplacementHorizontal;
@@ -31,8 +33,7 @@ public class Skieur : MonoBehaviour
 
     float deplacementHor = 0;
     float deplacementVert = 0;
-    //booléen pour savoir si le skieur est mort ou pas
-      public bool estMort = false;
+   
  
     
     void Start()
@@ -40,7 +41,7 @@ public class Skieur : MonoBehaviour
           
           //récuperer le rigidbody2D
         rigid = GetComponent<Rigidbody2D>();
-        //Variable de l'audio
+      
        
         //Afficher le nombre de points
         textePoint.text = $"{points} pts";
@@ -94,4 +95,3 @@ void Update(){
     }
 }
 
-// IMANE, ENLEVE LES SIGNES D'INTERROGATION, CELA INDIQUE CHATGPT
