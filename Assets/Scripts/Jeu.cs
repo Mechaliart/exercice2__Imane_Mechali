@@ -17,7 +17,7 @@ public class Jeu : MonoBehaviour
 
     void Update()
     {
-
+   
     }
 
     private void RedemarrerScene()
