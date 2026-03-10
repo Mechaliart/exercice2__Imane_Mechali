@@ -3,29 +3,29 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using static Unity.VisualScripting.Member;
+
 
 public class Skieur : MonoBehaviour
 
 
 {
-       //===== Variables publiques
-     public float vitesse;
-     public float vitesseverticale;
+    //===== Variables publiques
+    public float vitesse;
+    public float vitesseverticale;
     //Mettre public pour pouvoir assigner de l'inspecteur le texte attribué
     public TMP_Text textePoint;
     public TMP_Text texteTemps;
     //Pour l'élément Canvas --> le panneau de mort et de victoire (Dans la collection)
     public GameObject PanneauMort;
     public GameObject PanneauVictoire;
-   
-      //Points
+
+    //Points
     public int points = 0;
     //Temps
-    public float tempsPasse = 0f; 
+    public float tempsPasse = 0f;
     //booléen pour savoir si le skieur est mort ou pas
-      public bool estMort = false;
-
+    public bool estMort = false;
+    public bool estGagnant = false;
     public InputAction onDeplacementVertical;
     public InputAction onDeplacementHorizontal;
 
@@ -35,23 +35,23 @@ public class Skieur : MonoBehaviour
     float deplacementHor = 0;
     float deplacementVert = 0;
     //Sons
-  
-    
+
+
     AudioSource audioSource;
-    public AudioClip sonPointCollision;  
+    public AudioClip sonPointCollision;
     public AudioClip sonMort;
     public AudioClip sonVictoire;
 
-   
- 
-    
+
+
+
     void Start()
     {
-        
-          //récuperer le rigidbody2D
+
+        //récuperer le rigidbody2D
         rigid = GetComponent<Rigidbody2D>();
-      
-       
+
+
         //Afficher le nombre de points
         textePoint.text = $"{points} pts";
         //sons
@@ -68,15 +68,16 @@ public class Skieur : MonoBehaviour
 
     private void OnDisable()
     {
-        
+
         onDeplacementHorizontal.Disable();
         onDeplacementVertical.Disable();
 
 
     }
-void Update(){
-    /*Si le personnage est mort*/
-    if (estMort == false)
+    void Update()
+    {
+        /*Si le personnage est mort*/
+        if (estMort == false && estGagnant == false)
         {
             //On change le temps affiché dans le UI
             tempsPasse += Time.deltaTime;
@@ -91,58 +92,59 @@ void Update(){
         redemarrer le jeu*/
             deplacementHor = 0;
             deplacementVert = 0;
-            
-            if(Keyboard.current.spaceKey.wasPressedThisFrame)
+
+            if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
                 Invoke("RedemarrerScene", 1f);
             }
         }
         //Déplacer le skieur en fonction des touches appuyées
-    rigid.linearVelocity = new Vector2(
-            deplacementHor * vitesse,
-            deplacementVert * vitesseverticale
-            );
-         
-}
+        rigid.linearVelocity = new Vector2(
+                deplacementHor * vitesse,
+                deplacementVert * vitesseverticale
+                );
 
-void RedemarrerScene()
+    }
+
+    void RedemarrerScene()
     {
         string nomSceneCourante = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(nomSceneCourante);
     }
-        private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         //Quand le skieur rentre en collision avec le yeti (avec le tag catégorie danger) le skieur devient mort
         /*la caméra se déconnecte*/
         if (estMort == false && collision.gameObject.tag == "Danger")
         {
             audioSource.PlayOneShot(sonMort);
-         
-          /*le skieur devient mort*/ 
-         estMort = true;
-           //afficher la fonction pour afficher le panneau de mort
-        Mourir();
-        //la caméra se déconnecte
-        DeconnecterCamera();   
-        }   
-   
- 
+
+            /*le skieur devient mort*/
+            estMort = true;
+            //afficher la fonction pour afficher le panneau de mort
+            Mourir();
+            //la caméra se déconnecte
+            DeconnecterCamera();
+        }
+
+
     }
-     void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D collision)
     {
 
         /*===================================Ligne d'arrivée===========================*/
         //Quand le skieur rentre en collision avec le drapeau (avec le tag catégorie Finish) le skieur gagne et la caméra se déconnecte
-        if (estMort == false && collision.gameObject.tag == "Finish")
+        if (estGagnant == false && collision.gameObject.tag == "Finish")
         {
+            estGagnant = true;
             Victoire();
             DeconnecterCamera();
             audioSource.PlayOneShot(sonVictoire);
-            }
-            /*==================================Portails=============================*/
-            
-            /*Quand ca rentre en contact avec le box collider du portail augmenter de points*/
-            if (estMort == false && collision.gameObject.tag == "Points")
+        }
+        /*==================================Portails=============================*/
+
+        /*Quand ca rentre en contact avec le box collider du portail augmenter de points*/
+        if (estMort == false && collision.gameObject.tag == "Points")
         {
             // Debug.Log("Collision avec: portail" + collision.gameObject.name);
             points += 1;
@@ -150,31 +152,33 @@ void RedemarrerScene()
             audioSource.PlayOneShot(sonPointCollision);
         }
 
-            /*==========================bonhommes de neige=============================*/
-                
-/*Quand on rentre en collision avec un bonhomme de neige (avec le tag "collectable") On ajoute un point et on désactive(cache l'objet)*/
-             if (estMort == false && collision.gameObject.CompareTag("Collectable"))
-            {
-                points += 1;
-                 textePoint.text = $"{points} pts";
-                collision.gameObject.SetActive(false);
-                    audioSource.PlayOneShot(sonVictoire);
-    // Debug.Log("Collision avec: bonhomme" + collision.gameObject.name);
-}
- }
-   
-     //fonction pour afficher le panel de mort
-    void Mourir(){
-            PanneauMort.SetActive(true);
+        /*==========================bonhommes de neige=============================*/
+
+        /*Quand on rentre en collision avec un bonhomme de neige (avec le tag "collectable") On ajoute un point et on désactive(cache l'objet)*/
+        if (estMort == false && collision.gameObject.CompareTag("Collectable"))
+        {
+            points += 1;
+            textePoint.text = $"{points} pts";
+            collision.gameObject.SetActive(false);
+            audioSource.PlayOneShot(sonVictoire);
+            // Debug.Log("Collision avec: bonhomme" + collision.gameObject.name);
+        }
+    }
+
+    //fonction pour afficher le panel de mort
+    void Mourir()
+    {
+        PanneauMort.SetActive(true);
     }
     //fonction pour afficher le panel pour la victoire
-    void Victoire() {
-            PanneauVictoire.SetActive(true);
+    void Victoire()
+    {
+        PanneauVictoire.SetActive(true);
     }
     // Il faut appeller cette fonction dans la collision avec le yeti.
     void DeconnecterCamera()
     {
         Camera.main.GetComponent<PositionConstraint>().enabled = false;
     }
-    }
+}
 
