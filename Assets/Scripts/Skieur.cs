@@ -126,6 +126,11 @@ public class Skieur : MonoBehaviour
             //la caméra se déconnecte
             DeconnecterCamera();
         }
+         if(estMort == false && collision.gameObject.CompareTag("Colliders"))
+        {
+            audioSource.PlayOneShot(sonPointCollision);
+            
+        }
 
 
     }
@@ -150,6 +155,7 @@ public class Skieur : MonoBehaviour
             points += 1;
             textePoint.text = $"{points} pts";
             audioSource.PlayOneShot(sonPointCollision);
+            audioSource.PlayOneShot(sonVictoire);
         }
 
         /*==========================bonhommes de neige=============================*/
@@ -163,6 +169,7 @@ public class Skieur : MonoBehaviour
             audioSource.PlayOneShot(sonVictoire);
             // Debug.Log("Collision avec: bonhomme" + collision.gameObject.name);
         }
+       
     }
 
     //fonction pour afficher le panel de mort
