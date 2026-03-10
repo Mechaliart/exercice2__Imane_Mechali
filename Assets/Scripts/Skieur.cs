@@ -34,6 +34,14 @@ public class Skieur : MonoBehaviour
 
     float deplacementHor = 0;
     float deplacementVert = 0;
+    //Sons
+  
+    
+    AudioSource audioSource;
+    public AudioClip sonPointCollision;  
+    public AudioClip sonMort;
+    public AudioClip sonVictoire;
+
    
  
     
@@ -46,9 +54,11 @@ public class Skieur : MonoBehaviour
        
         //Afficher le nombre de points
         textePoint.text = $"{points} pts";
+        //sons
+        audioSource = GetComponent<AudioSource>();
     }
 
-    // Utiliser ces fonctions pour activer et desactiver les InputActions
+    // Utiliser ces fonctions pour activer et desactiver les touches de clavier
     private void OnEnable()
     {
         onDeplacementHorizontal.Enable();
@@ -58,6 +68,7 @@ public class Skieur : MonoBehaviour
 
     private void OnDisable()
     {
+        
         onDeplacementHorizontal.Disable();
         onDeplacementVertical.Disable();
 
@@ -70,6 +81,7 @@ void Update(){
             //On change le temps affiché dans le UI
             tempsPasse += Time.deltaTime;
             texteTemps.text = $"{tempsPasse:F1}S";
+            //Récupérer les valeurs des InputActions (touches)
 
             deplacementHor = onDeplacementHorizontal.ReadValue<float>();
             deplacementVert = onDeplacementVertical.ReadValue<float>();
@@ -85,13 +97,12 @@ void Update(){
                 Invoke("RedemarrerScene", 1f);
             }
         }
+        //Déplacer le skieur en fonction des touches appuyées
     rigid.linearVelocity = new Vector2(
             deplacementHor * vitesse,
             deplacementVert * vitesseverticale
             );
-            if(estMort == true){
-
-            }
+         
 }
 
 void RedemarrerScene()
@@ -105,33 +116,58 @@ void RedemarrerScene()
         /*la caméra se déconnecte*/
         if (estMort == false && collision.gameObject.tag == "Danger")
         {
+            audioSource.PlayOneShot(sonMort);
+         
           /*le skieur devient mort*/ 
          estMort = true;
-           
+           //afficher la fonction pour afficher le panneau de mort
         Mourir();
-        DeconnecterCamera();
-        }
-     void OnTriggerEnter2D(Collider2D collision)
-    {
-       // Si le tag du gameobject de la collision est "Etoile" et que le joueur n'est pas mort
-       if (estMort == false && collision.gameObject.tag == "Collectable")
-       {
-           
-           Bonhommes bonhomme = collision.GetComponent<Bonhommes>();
-        
-           bonhomme.Cacher();
-           // Ajouter des points
-           points += 1;
-           
-       }
-        if ( collision.gameObject.tag == "Finish"){
-            Victoire();
-        }
+        //la caméra se déconnecte
+        DeconnecterCamera();   
+        }   
+   
  
     }
+     void OnTriggerEnter2D(Collider2D collision)
+    {
+
+        /*===================================Ligne d'arrivée===========================*/
+        //Quand le skieur rentre en collision avec le drapeau (avec le tag catégorie Finish) le skieur gagne et la caméra se déconnecte
+        if (estMort == false && collision.gameObject.tag == "Finish")
+        {
+            Victoire();
+            DeconnecterCamera();
+            audioSource.PlayOneShot(sonVictoire);
+            }
+            /*==================================Portails=============================*/
+            
+            /*Quand ca rentre en contact avec le box collider du portail augmenter de points*/
+            if (estMort == false && collision.gameObject.tag == "Points")
+        {
+            // Debug.Log("Collision avec: portail" + collision.gameObject.name);
+            points += 1;
+            textePoint.text = $"{points} pts";
+            audioSource.PlayOneShot(sonPointCollision);
+        }
+
+            /*==========================bonhommes de neige=============================*/
+                
+/*Quand on rentre en collision avec un bonhomme de neige (avec le tag "collectable") On ajoute un point et on désactive(cache l'objet)*/
+             if (estMort == false && collision.gameObject.CompareTag("Collectable"))
+            {
+                points += 1;
+                 textePoint.text = $"{points} pts";
+                collision.gameObject.SetActive(false);
+                    audioSource.PlayOneShot(sonVictoire);
+    // Debug.Log("Collision avec: bonhomme" + collision.gameObject.name);
+}
+ }
+   
+     //fonction pour afficher le panel de mort
     void Mourir(){
             PanneauMort.SetActive(true);
     }
+    //fonction pour afficher le panel pour la victoire
     void Victoire() {
             PanneauVictoire.SetActive(true);
     }
@@ -140,5 +176,5 @@ void RedemarrerScene()
     {
         Camera.main.GetComponent<PositionConstraint>().enabled = false;
     }
-    }}
+    }
 
